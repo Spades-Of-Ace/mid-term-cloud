@@ -1,10 +1,18 @@
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
-  name: String,
-  club: String,
+  title: { type: String, required: true },
   description: String,
-  date: Date
-}, { timestamps: true });
+  date: Date,
+  clubId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club',
+    required: true
+  },
+  attendees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
+});
 
-module.exports = mongoose.model('event_collection', EventSchema);
+module.exports = mongoose.model('Event', EventSchema);

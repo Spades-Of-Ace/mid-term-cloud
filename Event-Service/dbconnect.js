@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-const uri = 'mongodb://localhost:27017/Clubbie';
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ MongoDB Connected (Event Service)');
+  } catch (err) {
+    console.error('❌ MongoDB connection failed (Event):', err.message);
+    process.exit(1);
+  }
+};
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB - Event Service');
-});
-
-module.exports = mongoose;
+module.exports = connectDB;

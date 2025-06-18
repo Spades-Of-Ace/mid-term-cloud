@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
-const uri = 'mongodb://localhost:27017/Aupp2025';
+require('dotenv').config();
 
-mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ MongoDB Connected (Inventory Service)');
+  } catch (err) {
+    console.error('❌ MongoDB connection failed (Inventory):', err.message);
+    process.exit(1);
+  }
+};
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'Connection error:'));
-db.once('open', () => {
-    console.log('Connected to MongoDB (Inventory Service)');
-});
-
-module.exports = mongoose;
+module.exports = connectDB;

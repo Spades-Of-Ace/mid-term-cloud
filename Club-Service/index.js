@@ -1,15 +1,23 @@
 const express = require('express');
-const connectDB = require('./dbconnect');
+const connectDB = require('./db');
+const clubRoutes = require('./routes/clubRoutes');
+const authToken = require('./middleware/authToken');
+const authRole = require('./middleware/authRole');
+
 const app = express();
+app.use(express.json());
 
 connectDB();
 
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('Club Service is live');
+// Health check route
+app.get('/', authToken, authRole('club_leader'), (req, res) => {
+  res.json({ message: 'Club endpoint working ✅' });
 });
 
-app.listen(5002, () => {
-  console.log('Server running on port 5002');
+// ✅ Activate actual club routes
+app.use('/club', authToken, authRole('club_leader'), clubRoutes);
+
+const PORT = 5002;
+app.listen(PORT, () => {
+  console.log(`✅ Club Service running on port ${PORT}`);
 });

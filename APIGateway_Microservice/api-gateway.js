@@ -1,11 +1,12 @@
 const express = require('express');
-const app = express();
-const httpProxy = require('http-proxy');
-const proxy = httpProxy.createProxyServer();
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || "347186591486#^%%ABCF*##GHE";
+const app = express();
+app.use(express.json());
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function authToken(req, res, next) {
   const header = req.headers.authorization;
@@ -21,38 +22,40 @@ function authToken(req, res, next) {
 
 function authRole(role) {
   return (req, res, next) => {
-    if (req.user.role !== role) {
-      return res.status(403).json("Unauthorized");
-    }
+    if (req.user.role !== role) return res.status(403).json("Unauthorized");
     next();
   };
 }
 
-// Registration/Login Microservice
-app.use('/auth', (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5001' });
-});
+// Routes
+app.use('/auth', createProxyMiddleware({
+  target: 'http://localhost:5001',
+  changeOrigin: true,
+  pathRewrite: { '^/auth': '' } // forwards /auth/register → /register
+}));
 
-// Club Microservice
-app.use('/club', authToken, authRole('club_leader'), (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5002' });
-});
+app.use('/club', authToken, authRole('club_leader'), createProxyMiddleware({
+  target: 'http://localhost:5002',
+  changeOrigin: true,
+  pathRewrite: { '^/club': '' }
+}));
 
-// Event Microservice
-app.use('/event', authToken, authRole('club_leader'), (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5003' });
-});
+app.use('/event', authToken, authRole('club_leader'), createProxyMiddleware({
+  target: 'http://localhost:5003',
+  changeOrigin: true,
+  pathRewrite: { '^/event': '' }
+}));
 
-// Budget Microservice
-app.use('/budget', authToken, authRole('club_leader'), (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5004' });
-});
+app.use('/budget', authToken, authRole('club_leader'), createProxyMiddleware({
+  target: 'http://localhost:5004',
+  changeOrigin: true,
+  pathRewrite: { '^/budget': '' }
+}));
 
-// Inventory Microservice
-app.use('/inventory', authToken, authRole('club_leader'), (req, res) => {
-  proxy.web(req, res, { target: 'http://localhost:5005' });
-});
+app.use('/inventory', authToken, authRole('club_leader'), createProxyMiddleware({
+  target: 'http://localhost:5005',
+  changeOrigin: true,
+  pathRewrite: { '^/inventory': '' }
+}));
 
-app.listen(4000, () => {
-  console.log("API Gateway is running on PORT 4000");
-});
+app.listen(4000, () => console.log("🚀 API Gateway running on port 4000"));

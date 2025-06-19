@@ -1,46 +1,52 @@
 const express = require('express');
-const app = express();
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-const jwt = require('jsonwebtoken')
+const app = express();
 app.use(express.json());
 
-const JWT_SECRETE = "347186591486#^%%ABCF*##GHE"
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const PersonModel = require('./person_schema.js');
-const dbconnect = require('./dbconnect.js');
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ MongoDB Connected (Auth Service)');
+  } catch (err) {
+    console.error('❌ MongoDB connection failed:', err);
+  }
+};
 
-/*
-In the postman use the following URL
-localhost:5002/login
+connectDB();
 
-{
-  "email":"a@gmail.com",
-  "password":"abc",
-  "role":"student"
-}
+const userSchema = new mongoose.Schema({
+  emailid: String,
+  pass: String,
+  role: String
+});
+const PersonModel = mongoose.model('Person', userSchema);
 
-*/
+app.post('/register', async (req, res) => {
+  const { email, password, role } = req.body;
+  try {
+    const user = new PersonModel({ emailid: email, pass: password, role });
+    await user.save();
+    res.json({ message: 'User registered' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// LOGIN API
-app.post("/login", (req, res) => {
-  //console.log(req.body.email)
-  //console.log(req.body.password)
-  //console.log(req.body.role)
+app.post('/login', async (req, res) => {
+  const { email, password, role } = req.body;
+  const user = await PersonModel.findOne({ emailid: email, pass: password, role });
+  if (user) {
+    const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
 
-  PersonModel.find({ "emailid": req.body.email, "pass": req.body.password, "role" : req.body.role})
-    .then(getsearchdocument => {
-      console.log(getsearchdocument)
-      if (getsearchdocument.length > 0) {
-        const token = jwt.sign({ email: req.body.email, role: req.body.role }, JWT_SECRETE, { expiresIn: '24h' })
-        return res.json({ token })
-      }
-      else {
-        res.status(400).send("Invalid user")
-      }
-    }) //CLOSE THEN
-}//CLOSE CALLBACK FUNCTION BODY
-)//CLOSE Post METHOD
-
-app.listen(5002, () => {
-    console.log('Authentication Service Server is running on PORT NO: 5002')
-})
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`✅ Auth Service running on port ${PORT}`));

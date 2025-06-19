@@ -1,7 +1,7 @@
-concurrently \
-  "cd Authentication_Microservice && node authentication-service.js" \
-  "cd Club-Service && node index.js" \
-  "cd Event-Service && node index.js" \
-  "cd Budget-Service && node index.js" \
-  "cd Inventory-Service && node index.js" \
-  "cd APIGateway_Microservice && node api-gateway.js"
+concurrently --kill-others-on-fail \
+  "cd Authentication_Microservice && nodemon authentication-service.js" \
+  "cd Club-Service && nodemon index.js" \
+  "cd Event-Service && nodemon index.js" \
+  "cd Budget-Service && nodemon index.js" \
+  "cd Inventory-Service && nodemon index.js" \
+  "cd APIGateway_Microservice && nodemon api-gateway.js"

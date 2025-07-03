@@ -13,6 +13,7 @@ exports.addItem = async (req, res) => {
 
 // View all items
 exports.getItems = async (req, res) => {
+  console.log("test")
   try {
     const items = await Inventory.find();
     res.status(200).json(items);

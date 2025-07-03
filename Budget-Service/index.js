@@ -7,7 +7,7 @@ app.use(express.json());
 
 connectDB();
 
-app.use('/budgets', budgetRoutes);
+app.use('/budget', budgetRoutes); // ✅ mount the route properly
 
 const PORT = 5004;
 app.listen(PORT, () => {
